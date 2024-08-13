@@ -1,17 +1,16 @@
 library(igraph)
 
 # Load the interaction data from a text file
-data <- read.table("interactions.txt", header = TRUE)
+data <- read.table("../edges.tsv", header = TRUE, sep = "\t")
 
 # Simplify the graph to remove multiple edges and self-loops, and convert it to a data frame
 semRedRede <- as_data_frame(simplify(graph_from_data_frame(data, directed=FALSE)))
 
 # Create an undirected graph from the simplified data frame
-rede <- graph.data.frame(semRedRede, directed = FALSE)
+rede <- graph_from_data_frame(semRedRede, directed = FALSE)
 
 # Calculate the betweenness centrality for each vertex in the network
-gargalo <- betweenness(rede, v = V(rede), directed = FALSE, weights = NULL,
-                       nobigint = TRUE, normalized = FALSE)
+gargalo <- betweenness(rede, v = V(rede), directed = FALSE, weights = NULL, normalized = FALSE)
 
 # Convert the betweenness centrality to a table and then to a data frame
 gargalo <- as.table(gargalo)
@@ -43,11 +42,11 @@ summary(degreeTable)
 ######################## Module Detection ###################
 
 # Run the fast greedy algorithm to identify community structure (modules) in the network
-fc = fastgreedy.community(rede)
+fc = cluster_fast_greedy(rede)
 # Reference for the method: A Clauset, MEJ Newman, C Moore: Finding community structure in very large networks.
 
 # Save the module memberships for each vertex
-nos = as.data.frame(get.vertex.attribute(rede))
+nos = as.data.frame(vertex_attr(rede))
 c = as.data.frame(matrix(0, ncol = 2, nrow = length(nos[,1])))
 c[,1] = nos[,1]
 mod = as.data.frame(fc$membership)
