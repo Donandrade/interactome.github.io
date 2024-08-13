@@ -23,6 +23,19 @@ write.table(x=gargalTable, file = "betweenness.txt", sep = "\t",
 # Display a summary of the betweenness centrality data
 summary(gargalTable)
 
+# Display a summary of the degree centrality data
+tmp <-summary(gargalTable)
+
+# Dividindo a string com base nos ":"
+split_result <- strsplit(tmp[11], ":")[[1]]
+
+# Removendo espaços em branco desnecessários
+split_result <- trimws(split_result)
+
+# Exibindo o vetor
+cutoff_betweenness <- as.numeric(split_result[2])
+
+cutoff_betweenness
 ######################### Degree Centrality ###################
 
 # Calculate the degree centrality for each vertex in the network
@@ -37,7 +50,44 @@ write.table(x=degreeTable, file = "degree.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # Display a summary of the degree centrality data
-summary(degreeTable)
+tmp <-summary(degreeTable)
+
+# Dividindo a string com base nos ":"
+split_result <- strsplit(tmp[11], ":")[[1]]
+
+# Removendo espaços em branco desnecessários
+split_result <- trimws(split_result)
+
+# Exibindo o vetor
+cutoff_degree <- as.numeric(split_result[2])
+###############################################################
+
+centralid <- cbind(gargalTable, degreeTable$Freq)
+
+colnames(centralid) <- c("source", "betweenness", "degree")
+
+head(centralid)
+
+h <- subset(centralid, betweenness < cutoff_betweenness  & degree > cutoff_degree)
+
+hb <- subset(centralid, betweenness > cutoff_betweenness  & degree > cutoff_degree)
+
+c <- subset(centralid, betweenness < cutoff_betweenness  & degree < cutoff_degree)
+
+b <- subset(centralid, betweenness > cutoff_betweenness  & degree < cutoff_degree)
+
+write.table(x=h, file = "highest_h.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+write.table(x=b, file = "highest_b.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+write.table(x=hb, file = "highest_hb.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+write.table(x=c, file = "c.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
 
 ######################## Module Detection ###################
 
