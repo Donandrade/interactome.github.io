@@ -76,21 +76,35 @@ c <- subset(centralid, betweenness < cutoff_betweenness  & degree < cutoff_degre
 
 b <- subset(centralid, betweenness > cutoff_betweenness  & degree < cutoff_degree)
 
+
+#### Hub proteins
 write.table(x=h, file = "highest_h.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(h$source), "H"), file = "h.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 
+#### Bottleneck proteins
 write.table(x=b, file = "highest_b.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-write.table(x=hb, file = "highest_hb.txt", sep = "\t",
+write.table(cbind(as.character(b$source), "B"), file = "b.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-write.table(x=c, file = "c.txt", sep = "\t",
+
+### Hub-bottlenecks proteins
+write.table(x=hb, file = "highest_hb.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(hb$source), "HB"), file = "hb.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
+### Common proteins
+write.table(x=c, file = "common.txt", sep = "\t",
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(c$source), "C"), file = "c.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
 ######################## Module Detection ###################
-
 # Run the fast greedy algorithm to identify community structure (modules) in the network
 fc = cluster_fast_greedy(rede)
 # Reference for the method: A Clauset, MEJ Newman, C Moore: Finding community structure in very large networks.
