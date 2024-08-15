@@ -1,7 +1,7 @@
 library(igraph)
 
 # Load the interaction data from a text file
-data <- read.table("../edges.tsv", header = TRUE, sep = "\t")
+data <- read.table("../network_analysis_bb/edges.tsv", header = TRUE, sep = "\t")
 
 # Simplify the graph to remove multiple edges and self-loops, and convert it to a data frame
 semRedRede <- as_data_frame(simplify(graph_from_data_frame(data, directed=FALSE)))
@@ -116,6 +116,23 @@ c[,1] = nos[,1]
 mod = as.data.frame(fc$membership)
 c[,2] = mod[,1]
 
+head(c)
+
 # Save the module data to a text file
 write.table(x=c, file = "clusters_select.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
+#####################  Loop para salvar os arquivos ######################## 
+unique_clusters <- unique(c$V2)
+
+unique_clusters
+
+for (cluster in unique_clusters) {
+  # Filtra o cluster específico
+  subset_cluster <- c[c$V2 == cluster, "V1", drop = FALSE]
+  
+  # Define o nome do arquivo
+  file_name <- paste0("cluster_", cluster, ".txt")
+  
+  # Salva o arquivo
+  write.table(subset_cluster, file_name, row.names = FALSE, col.names = FALSE, quote = FALSE)
+}
