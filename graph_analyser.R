@@ -50,10 +50,10 @@ write.table(x=degreeTable, file = "degree.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # Display a summary of the degree centrality data
-tmp <-summary(degreeTable)
+tmp2 <-summary(degreeTable)
 
 # Dividindo a string com base nos ":"
-split_result <- strsplit(tmp[11], ":")[[1]]
+split_result <- strsplit(tmp2[11], ":")[[1]]
 
 # Removendo espaços em branco desnecessários
 split_result <- trimws(split_result)
