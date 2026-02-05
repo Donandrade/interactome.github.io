@@ -121,7 +121,7 @@ head(c)
 # Save the module data to a text file
 write.table(x=c, file = "clusters_select.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#####################  Loop para salvar os arquivos ######################## 
+#####################  Loop para salvar os arquivos ########################
 unique_clusters <- unique(c$V2)
 
 unique_clusters
@@ -129,10 +129,11 @@ unique_clusters
 for (cluster in unique_clusters) {
   # Filtra o cluster específico
   subset_cluster <- c[c$V2 == cluster, "V1", drop = FALSE]
-  
+
   # Define o nome do arquivo
   file_name <- paste0("cluster_", cluster, ".txt")
-  
+
   # Salva o arquivo
   write.table(subset_cluster, file_name, row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
+~
