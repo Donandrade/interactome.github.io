@@ -38,7 +38,7 @@ install.packages("igraph")
 
 ### Usage
 
-Prepare Data: Place your interaction file in the exemple/ folder. The default script expects a space-separated file, but you can adjust the sep parameter in read.table.
+Prepare Data: Place your interaction file in the `exemple/` folder. The default script expects a space-separated file, but you can adjust the sep parameter in read.table.
 
 ```r
 data <- read.table("exemple/your_data.txt", header = TRUE, sep = " ")
