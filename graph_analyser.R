@@ -1,7 +1,13 @@
 library(igraph)
 
+# Create the results directory if it doesn't already exist
+if (!dir.exists("results")) {
+  dir.create("results")
+}
+
 # Load the interaction data from a text file
-data <- read.table("../network_analysis_bb/edges.tsv", header = TRUE, sep = "\t")
+# Note: Ensure the path to the input file is correct for your environment
+data <- read.table("exemple/STRG0A37MEC.protein.links.v12.0_400.txt", header = TRUE, sep = " ")
 
 # Simplify the graph to remove multiple edges and self-loops, and convert it to a data frame
 semRedRede <- as_data_frame(simplify(graph_from_data_frame(data, directed=FALSE)))
@@ -9,131 +15,89 @@ semRedRede <- as_data_frame(simplify(graph_from_data_frame(data, directed=FALSE)
 # Create an undirected graph from the simplified data frame
 rede <- graph_from_data_frame(semRedRede, directed = FALSE)
 
-# Calculate the betweenness centrality for each vertex in the network
-gargalo <- betweenness(rede, v = V(rede), directed = FALSE, weights = NULL, normalized = FALSE)
+# --- Betweenness Centrality ---
 
-# Convert the betweenness centrality to a table and then to a data frame
+# Calculate the betweenness centrality for each vertex
+gargalo <- betweenness(rede, v = V(rede), directed = FALSE, weights = NULL, normalized = FALSE)
 gargalo <- as.table(gargalo)
 gargalTable <- as.data.frame(gargalo)
 
-# Save the betweenness centrality data to a text file
-write.table(x=gargalTable, file = "betweenness.txt", sep = "\t",
+# Save the betweenness centrality data to the results folder
+write.table(x=gargalTable, file = "results/betweenness.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-# Display a summary of the betweenness centrality data
-summary(gargalTable)
-
-# Display a summary of the degree centrality data
-tmp <-summary(gargalTable)
-
-# Dividindo a string com base nos ":"
-split_result <- strsplit(tmp[11], ":")[[1]]
-
-# Removendo espaços em branco desnecessários
-split_result <- trimws(split_result)
-
-# Exibindo o vetor
+# Extract the cutoff value (Mean/Median) from the summary string logic
+tmp <- summary(gargalTable)
+split_result <- trimws(strsplit(tmp[11], ":")[[1]])
 cutoff_betweenness <- as.numeric(split_result[2])
 
-cutoff_betweenness
-######################### Degree Centrality ###################
+# --- Degree Centrality ---
 
-# Calculate the degree centrality for each vertex in the network
+# Calculate the degree centrality for each vertex
 grau <- degree(rede, v = V(rede), loops = TRUE, normalized = FALSE)
-
-# Convert the degree centrality to a table and then to a data frame
 grau <- as.table(grau)
 degreeTable <- as.data.frame(grau)
 
-# Save the degree centrality data to a text file
-write.table(x=degreeTable, file = "degree.txt", sep = "\t",
+# Save the degree centrality data to the results folder
+write.table(x=degreeTable, file = "results/degree.txt", sep = "\t",
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-# Display a summary of the degree centrality data
-tmp2 <-summary(degreeTable)
+# Extract the cutoff value for degree
+tmp2 <- summary(degreeTable)
+split_result_deg <- trimws(strsplit(tmp2[11], ":")[[1]])
+cutoff_degree <- as.numeric(split_result_deg[2])
 
-# Dividindo a string com base nos ":"
-split_result <- strsplit(tmp2[11], ":")[[1]]
-
-# Removendo espaços em branco desnecessários
-split_result <- trimws(split_result)
-
-# Exibindo o vetor
-cutoff_degree <- as.numeric(split_result[2])
-###############################################################
+# --- Protein Classification ---
 
 centralid <- cbind(gargalTable, degreeTable$Freq)
-
 colnames(centralid) <- c("source", "betweenness", "degree")
 
-head(centralid)
+# Classify proteins based on thresholds
+h  <- subset(centralid, betweenness < cutoff_betweenness & degree > cutoff_degree)
+hb <- subset(centralid, betweenness > cutoff_betweenness & degree > cutoff_degree)
+c_comm  <- subset(centralid, betweenness < cutoff_betweenness & degree < cutoff_degree)
+b  <- subset(centralid, betweenness > cutoff_betweenness & degree < cutoff_degree)
 
-h <- subset(centralid, betweenness < cutoff_betweenness  & degree > cutoff_degree)
+# Save classified proteins to the results folder
+# Hubs
+write.table(x=h, file = "results/highest_h.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(h$source), "H"), file = "results/h.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-hb <- subset(centralid, betweenness > cutoff_betweenness  & degree > cutoff_degree)
+# Bottlenecks
+write.table(x=b, file = "results/highest_b.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(b$source), "B"), file = "results/b.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-c <- subset(centralid, betweenness < cutoff_betweenness  & degree < cutoff_degree)
+# Hub-Bottlenecks
+write.table(x=hb, file = "results/highest_hb.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(hb$source), "HB"), file = "results/hb.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-b <- subset(centralid, betweenness > cutoff_betweenness  & degree < cutoff_degree)
+# Common
+write.table(x=c_comm, file = "results/common.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(cbind(as.character(c_comm$source), "C"), file = "results/c.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
+# --- Module Detection ---
 
-#### Hub proteins
-write.table(x=h, file = "highest_h.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-write.table(cbind(as.character(h$source), "H"), file = "h.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-#### Bottleneck proteins
-write.table(x=b, file = "highest_b.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-write.table(cbind(as.character(b$source), "B"), file = "b.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-
-### Hub-bottlenecks proteins
-write.table(x=hb, file = "highest_hb.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-write.table(cbind(as.character(hb$source), "HB"), file = "hb.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-
-### Common proteins
-write.table(x=c, file = "common.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-write.table(cbind(as.character(c$source), "C"), file = "c.txt", sep = "\t",
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-
-
-######################## Module Detection ###################
-# Run the fast greedy algorithm to identify community structure (modules) in the network
+# Run the fast greedy algorithm to identify community structure
 fc = cluster_fast_greedy(rede)
-# Reference for the method: A Clauset, MEJ Newman, C Moore: Finding community structure in very large networks.
-
-# Save the module memberships for each vertex
 nos = as.data.frame(vertex_attr(rede))
-c = as.data.frame(matrix(0, ncol = 2, nrow = length(nos[,1])))
-c[,1] = nos[,1]
-mod = as.data.frame(fc$membership)
-c[,2] = mod[,1]
+cluster_map = as.data.frame(matrix(0, ncol = 2, nrow = length(nos[,1])))
+cluster_map[,1] = nos[,1]
+cluster_map[,2] = as.data.frame(fc$membership)[,1]
 
-head(c)
+# Save the module data to the results folder
+write.table(x=cluster_map, file = "results/clusters_select.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-# Save the module data to a text file
-write.table(x=c, file = "clusters_select.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
+# --- Individual Cluster Export ---
 
-#####################  Loop para salvar os arquivos ########################
-unique_clusters <- unique(c$V2)
-
-unique_clusters
+unique_clusters <- unique(cluster_map[,2])
 
 for (cluster in unique_clusters) {
-  # Filtra o cluster específico
-  subset_cluster <- c[c$V2 == cluster, "V1", drop = FALSE]
-
-  # Define o nome do arquivo
-  file_name <- paste0("cluster_", cluster, ".txt")
-
-  # Salva o arquivo
+  # Filter nodes belonging to the current cluster
+  subset_cluster <- cluster_map[cluster_map[,2] == cluster, 1, drop = FALSE]
+  
+  # Define file path inside the results folder
+  file_name <- paste0("results/cluster_", cluster, ".txt")
+  
+  # Save each cluster to its own file
   write.table(subset_cluster, file_name, row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
-~
